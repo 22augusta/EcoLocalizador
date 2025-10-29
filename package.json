@@ -1,0 +1,11 @@
+{
+    "name": "ecolocalizador",
+    "version": "1.0.0",
+    "description": "PWA EcoLocalizador - gera PNGs de ícone a partir de SVGs para validação",
+    "scripts": {
+        "generate-icons": "node scripts/generate-icons.js"
+    },
+    "dependencies": {
+        "sharp": "^0.32.0"
+    }
+}

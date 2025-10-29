@@ -99,5 +99,19 @@ python3 -m http.server 8000
 
 2. Abra http://localhost:8000 no navegador (ou hospede em HTTPS) e clique em "Buscar minha localização". Verifique permissões de geolocalização.
 
+### Gerar PNGs de ícone (opcional, recomendado para validação)
+
+Para evitar alertas de validadores como Lighthouse ou PWA Builder sobre ícones, gere os PNGs a partir dos SVGs fornecidos usando o script incluido:
+
+```bash
+# instale dependências (uma vez)
+npm install
+
+# gere os ícones PNG a partir dos SVGs
+npm run generate-icons
+```
+
+Isso criará `icon-192.png` e `icon-512.png` na raiz do projeto, atualizando o `manifest.json` para usar PNGs como primeira opção.
+
 ````
 
