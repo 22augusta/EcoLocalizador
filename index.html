@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>EcoLocalizador</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#2e7d32">
+    <link rel="stylesheet" href="/styles.css">
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-sA+e2kG6s6b8qgk3Yb4j3wT2eY1VgqvP0v+3qv0vC2s=" crossorigin="" />
+</head>
+
+<body>
+    <header>
+        <h1>EcoLocalizador</h1>
+        <p>Encontre estações de carregamento próximas.</p>
+    </header>
+
+    <main>
+        <div class="controls">
+            <button id="locateBtn">Buscar minha localização</button>
+            <span id="status" role="status" aria-live="polite"></span>
+        </div>
+
+        <section id="map-section">
+            <div id="map" style="height: 360px; border: 1px solid #ddd; border-radius:6px"></div>
+        </section>
+
+        <section id="results" aria-live="polite"></section>
+    </main>
+
+    <footer>
+        <small>Offline: o app usa cache básico. API: Open Charge Map.</small>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-o9N1j8m+f2sH5zYbBj2q6q0s1v1k0nK3s9m2+2Gk0jI=" crossorigin=""></script>
+    <script src="/app.js"></script>
+</body>
+
+</html>
