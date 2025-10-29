@@ -50,7 +50,8 @@ async function getLocation() {
 
     try {
       showStatus('Buscando estações próximas...');
-      const url = `https://api.openchargemap.io/v3/poi/?output=json&latitude=${lat}&longitude=${lon}&distance=10&distanceunit=KM`;
+      // Usar proxy serverless em /api/poi para evitar CORS no cliente
+      const url = `/api/poi?latitude=${lat}&longitude=${lon}&distance=10`;
       const response = await fetch(url);
       if (!response.ok) throw new Error('Falha na requisição: ' + response.status);
       const data = await response.json();
