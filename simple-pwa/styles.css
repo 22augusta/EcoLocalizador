@@ -1,0 +1,71 @@
+:root {
+    --accent: #00695c;
+    --bg: #f7fff9;
+    --text: #073642
+}
+
+body {
+    font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 1rem
+}
+
+header {
+    margin-bottom: 1rem
+}
+
+h1 {
+    margin: .2rem 0
+}
+
+.controls {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap
+}
+
+button {
+    background: var(--accent);
+    color: #fff;
+    border: 0;
+    padding: .6rem 1rem;
+    border-radius: 6px;
+    cursor: pointer
+}
+
+section {
+    margin-top: 1rem
+}
+
+#results .item {
+    padding: .6rem;
+    border-radius: 6px;
+    background: #fff;
+    margin-bottom: .5rem
+}
+
+video {
+    width: 100%;
+    max-width: 420px;
+    border-radius: 6px;
+    background: #000
+}
+
+#photoPreview {
+    max-width: 100%;
+    margin-top: .5rem;
+    border-radius: 6px
+}
+
+.camera-actions {
+    margin-top: .5rem;
+    display: flex;
+    gap: .5rem
+}
+
+footer {
+    margin-top: 2rem;
+    color: #666
+}

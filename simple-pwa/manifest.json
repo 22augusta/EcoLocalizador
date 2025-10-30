@@ -1,0 +1,20 @@
+{
+    "name": "Simple PWA GeoCamera",
+    "short_name": "GeoCam",
+    "start_url": "/simple-pwa/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#00695c",
+    "icons": [
+        {
+            "src": "/simple-pwa/icon-192.svg",
+            "sizes": "192x192",
+            "type": "image/svg+xml"
+        },
+        {
+            "src": "/simple-pwa/icon-512.svg",
+            "sizes": "512x512",
+            "type": "image/svg+xml"
+        }
+    ]
+}
