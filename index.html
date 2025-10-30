@@ -42,6 +42,14 @@
 
         <section id="results" aria-live="polite"></section>
         <section id="debug" style="margin-top:1rem; font-size:13px; color:#333;"></section>
+        <section id="filters" style="margin-top:8px;">
+            <label><input id="filterFree" type="checkbox" /> Somente grátis</label>
+            <label style="margin-left:12px;">Marca: <input id="filterBrand" type="text" placeholder="ex: Itaipu"
+                    style="width:120px;" /></label>
+            <label style="margin-left:12px;">Min capacidade (kW): <input id="filterMinCap" type="number" step="1"
+                    min="0" style="width:80px;" /></label>
+            <button id="increaseRadius" style="margin-left:12px;">Aumentar raio</button>
+        </section>
         <section id="map" style="height:320px; margin-top:1rem;"></section>
     </main>
 

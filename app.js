@@ -102,6 +102,29 @@ async function getLocation() {
 
     try {
       const radiusInput = parseFloat(document.getElementById('radius')?.value || 10);
+      // UI elements for filters and spinner
+      const statusEl = () => document.getElementById('status');
+      const debugEl = () => document.getElementById('debug');
+      const filterFree = () => document.getElementById('filterFree');
+      const filterBrand = () => document.getElementById('filterBrand');
+      const filterMinCap = () => document.getElementById('filterMinCap');
+      const increaseRadiusBtn = () => document.getElementById('increaseRadius');
+
+      function showSpinner(show) {
+        const s = statusEl();
+        if (!s) return;
+        if (show) {
+          if (!document.getElementById('spinner')) {
+            const sp = document.createElement('span');
+            sp.id = 'spinner';
+            sp.className = 'spinner';
+            s.appendChild(sp);
+          }
+        } else {
+          const sp = document.getElementById('spinner');
+          if (sp) sp.remove();
+        }
+      }
       const useProxy = !!document.getElementById('useProxy')?.checked;
       showStatus(`Buscando estações próximas (raio ${radiusInput} km)...`);
       // Primeiro, tentar usar a API serverless em /api/poi (se estiver disponível)
@@ -132,29 +155,61 @@ async function getLocation() {
 
       if (!Array.isArray(data) || data.length === 0) {
         resultsDiv.innerHTML += '<p>Nenhuma estação encontrada na área.</p>';
-        showStatus('Nenhuma estação encontrada.');
+        showStatus('Nenhuma estação encontrada. Tente aumentar o raio.');
+        // attach increaseRadius handler
+        const inc = increaseRadiusBtn();
+        if (inc) {
+          inc.onclick = () => {
+            const rEl = document.getElementById('radius');
+            rEl.value = (parseFloat(rEl.value || 10) * 2).toFixed(1);
+            getLocation();
+          };
+        }
       } else {
-        // Data pode ter formatos diferentes (OpenChargeMap vs Overpass)
-        data.slice(0, 20).forEach(item => {
+        // apply filters client-side: free, brand, min capacity
+        const freeOnly = !!(filterFree()?.checked);
+        const brandFilter = (filterBrand()?.value || '').toLowerCase().trim();
+        const minCap = parseFloat(filterMinCap()?.value) || 0;
+
+        const filtered = data.filter(item => {
+          // normalize tags
+          const tags = item.tags || {};
+          const fee = (tags.fee || item.AddressInfo?.UsageCost || '').toLowerCase();
+          const brand = (tags.brand || item.AddressInfo?.Title || '').toLowerCase();
+          const capStr = tags.capacity || tags.power || '';
+          const cap = parseFloat(capStr) || 0;
+
+          if (freeOnly) {
+            if (fee && !fee.includes('no') && !fee.includes('free')) return false;
+          }
+          if (brandFilter) {
+            if (!brand.includes(brandFilter)) return false;
+          }
+          if (minCap > 0) {
+            if (cap < minCap) return false;
+          }
+          return true;
+        });
+
+        // render filtered
+        filtered.slice(0, 20).forEach(item => {
           let name = 'Estação';
           let latS, lonS, address = '';
           if (item.AddressInfo) {
-            // OpenChargeMap format
             const info = item.AddressInfo;
             name = info.Title || name;
             address = [info.AddressLine1, info.Town, info.StateOrProvince].filter(Boolean).join(' - ');
             latS = info.Latitude;
             lonS = info.Longitude;
           } else if (item.tags || item.type) {
-            // Overpass element
             const tags = item.tags || {};
             name = tags.name || tags.operator || name;
             latS = item.lat || (item.center && item.center.lat);
             lonS = item.lon || (item.center && item.center.lon);
+            address = tags['addr:street'] || '';
           }
 
           resultsDiv.innerHTML += `<div class="station"><strong>${name}</strong><br>${address}<br>${latS && lonS ? `<a href="https://www.openstreetmap.org/?mlat=${latS}&mlon=${lonS}#map=18/${latS}/${lonS}" target="_blank" rel="noopener">Abrir no mapa</a>` : 'Localização não disponível'}</div>`;
-
           if (latS && lonS) {
             L.marker([latS, lonS]).addTo(markersLayer).bindPopup(`${name}`);
           }
