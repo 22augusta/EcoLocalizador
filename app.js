@@ -43,7 +43,7 @@ closeCameraBtn.addEventListener('click', () => {
 // Registrar service worker (se suportado)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js')
+    navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
       .then(reg => console.log('Service Worker registrado:', reg.scope))
       .catch(err => console.warn('Registro do Service Worker falhou:', err));
   });
@@ -240,5 +240,19 @@ window.addEventListener('load', () => {
   initMap();
   const btn = document.getElementById('locateBtn');
   if (btn) btn.addEventListener('click', getLocation);
+  const testBtn = document.getElementById('testApiBtn');
+  if (testBtn) testBtn.addEventListener('click', async () => {
+    const dbg = debugEl();
+    if (dbg) dbg.textContent = 'Testando /api/poi ...';
+    try {
+      const resp = await fetch('/api/poi?latitude=-15.793889&longitude=-47.882778&distance=5');
+      const txt = await resp.text();
+      if (dbg) dbg.textContent = 'API response (text): ' + txt.slice(0, 2000);
+      if (!resp.ok) throw new Error('Status ' + resp.status);
+    } catch (err) {
+      if (dbg) dbg.textContent = 'Erro testando API: ' + err.message;
+      console.error('API test error', err);
+    }
+  });
 });
 
