@@ -1,0 +1,29 @@
+name: Lighthouse Audit
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for deploy
+        run: |
+          echo "Waiting 30s for Vercel to publish..."
+          sleep 30
+
+      - name: Run Lighthouse (report)
+        uses: treosh/lighthouse-ci-action@v9
+        with:
+          urls: |
+            https://ecolocalizador.vercel.app/
+          output: json
+          outputPath: ./lighthouse-report.json
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: ./lighthouse-report.json
