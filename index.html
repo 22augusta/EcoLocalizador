@@ -4,16 +4,42 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>EcoLocalizador — redirect</title>
-    <meta http-equiv="refresh" content="0; url=/simple-pwa/">
-    <script>
-      // fallback JS redirect for clients that block meta refresh
-      window.location.replace('/simple-pwa/');
-    </script>
+    <title>Simple PWA — Geo + Câmera</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#00695c">
+    <link rel="stylesheet" href="/styles.css">
 </head>
 
 <body>
-    <p>Redirecionando para <a href="/simple-pwa/">/simple-pwa/</a> …</p>
+    <header>
+        <h1>Simple PWA</h1>
+        <p>Geolocalização + câmera + POIs (OpenStreetMap)</p>
+    </header>
+
+    <main>
+        <section class="controls">
+            <button id="locateBtn">Buscar lugares próximos (Geolocalização)</button>
+            <button id="cameraBtn">Abrir câmera</button>
+        </section>
+
+        <section id="cameraSection" hidden>
+            <video id="video" autoplay playsinline></video>
+            <div class="camera-actions">
+                <button id="snapBtn">Tirar foto</button>
+                <button id="closeCameraBtn">Fechar câmera</button>
+            </div>
+            <canvas id="canvas" hidden></canvas>
+            <img id="photoPreview" alt="Prévia da foto" />
+        </section>
+
+        <section id="results" aria-live="polite"></section>
+    </main>
+
+    <footer>
+        <small>Offline: o app usa cache básico. Serve como PWA demonstrativa.</small>
+    </footer>
+
+    <script src="/app.js"></script>
 </body>
 
 </html>

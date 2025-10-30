@@ -1,3 +1,45 @@
+// Simple PWA: geolocalização + câmera + POIs (Overpass) with optional serverless proxy
+
+const locateBtn = document.getElementById('locateBtn');
+const results = document.getElementById('results');
+const cameraBtn = document.getElementById('cameraBtn');
+
+// Camera
+const cameraSection = document.getElementById('cameraSection');
+const video = document.getElementById('video');
+const snapBtn = document.getElementById('snapBtn');
+const closeCameraBtn = document.getElementById('closeCameraBtn');
+const canvas = document.getElementById('canvas');
+const photoPreview = document.getElementById('photoPreview');
+let stream;
+
+cameraBtn.addEventListener('click', async () => {
+  cameraSection.hidden = false;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+    video.srcObject = stream;
+  } catch (err) {
+    cameraSection.hidden = true;
+    alert('Não foi possível acessar a câmera: ' + err.message);
+  }
+});
+
+snapBtn.addEventListener('click', () => {
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const dataURL = canvas.toDataURL('image/png');
+  photoPreview.src = dataURL;
+  photoPreview.hidden = false;
+});
+
+closeCameraBtn.addEventListener('click', () => {
+  if (stream) {
+    stream.getTracks().forEach(t => t.stop());
+  }
+  cameraSection.hidden = true;
+});
 // Registrar service worker (se suportado)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -27,6 +69,16 @@ function showStatus(msg) {
   if (s) s.textContent = msg;
 }
 
+// Fallback Overpass query to find charging stations around lat/lon
+async function fetchOverpassStations(lat, lon, radius = 10000) {
+  const query = `[out:json][timeout:25];(node["amenity"="charging_station"](around:${radius},${lat},${lon});way["amenity"="charging_station"](around:${radius},${lat},${lon});relation["amenity"="charging_station"](around:${radius},${lat},${lon}););out center;`;
+  const url = 'https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(query);
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error('Overpass API retornou ' + resp.status);
+  const json = await resp.json();
+  return json.elements || [];
+}
+
 async function getLocation() {
   const locateBtn = document.getElementById('locateBtn');
   locateBtn.disabled = true;
@@ -50,11 +102,21 @@ async function getLocation() {
 
     try {
       showStatus('Buscando estações próximas...');
-      // Usar proxy serverless em /api/poi para evitar CORS no cliente
+      // Primeiro, tentar usar a API serverless em /api/poi (se estiver disponível)
       const url = `/api/poi?latitude=${lat}&longitude=${lon}&distance=10`;
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Falha na requisição: ' + response.status);
-      const data = await response.json();
+      let data = null;
+      try {
+        const response = await fetch(url);
+        if (response.ok) {
+          data = await response.json();
+        } else {
+          throw new Error('API serverless indisponível ou retornou ' + response.status);
+        }
+      } catch (proxyErr) {
+        console.warn('Proxy /api/poi failed, fallback to Overpass:', proxyErr);
+        // Fallback: usar Overpass (sem necessidade de chave)
+        data = await fetchOverpassStations(lat, lon);
+      }
 
       const resultsDiv = document.getElementById('results');
       resultsDiv.innerHTML = '<h2>Estações próximas:</h2>';
@@ -63,14 +125,26 @@ async function getLocation() {
         resultsDiv.innerHTML += '<p>Nenhuma estação encontrada na área.</p>';
         showStatus('Nenhuma estação encontrada.');
       } else {
-        data.slice(0, 20).forEach(station => {
-          const info = station.AddressInfo || {};
-          const name = info.Title || 'Sem nome';
-          const address = [info.AddressLine1, info.Town, info.StateOrProvince].filter(Boolean).join(' - ');
-          const latS = info.Latitude || station.AddressInfo?.Latitude;
-          const lonS = info.Longitude || station.AddressInfo?.Longitude;
+        // Data pode ter formatos diferentes (OpenChargeMap vs Overpass)
+        data.slice(0, 20).forEach(item => {
+          let name = 'Estação';
+          let latS, lonS, address = '';
+          if (item.AddressInfo) {
+            // OpenChargeMap format
+            const info = item.AddressInfo;
+            name = info.Title || name;
+            address = [info.AddressLine1, info.Town, info.StateOrProvince].filter(Boolean).join(' - ');
+            latS = info.Latitude;
+            lonS = info.Longitude;
+          } else if (item.tags || item.type) {
+            // Overpass element
+            const tags = item.tags || {};
+            name = tags.name || tags.operator || name;
+            latS = item.lat || (item.center && item.center.lat);
+            lonS = item.lon || (item.center && item.center.lon);
+          }
 
-          resultsDiv.innerHTML += `<div class="station"><strong>${name}</strong><br>${address}<br><a href="https://www.openstreetmap.org/?mlat=${latS}&mlon=${lonS}#map=18/${latS}/${lonS}" target="_blank" rel="noopener">Abrir no mapa</a></div>`;
+          resultsDiv.innerHTML += `<div class="station"><strong>${name}</strong><br>${address}<br>${latS && lonS ? `<a href="https://www.openstreetmap.org/?mlat=${latS}&mlon=${lonS}#map=18/${latS}/${lonS}" target="_blank" rel="noopener">Abrir no mapa</a>` : 'Localização não disponível'}</div>`;
 
           if (latS && lonS) {
             L.marker([latS, lonS]).addTo(markersLayer).bindPopup(`${name}`);

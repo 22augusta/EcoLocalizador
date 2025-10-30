@@ -1,3 +1,4 @@
+// Single consolidated service worker for the PWA.
 const CACHE_NAME = 'eco-cache-v1';
 const ASSETS = [
   '/',
@@ -26,9 +27,9 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Helper to identify API requests (Open Charge Map)
+// Helper to identify API requests (OpenStreetMap Overpass or Open Charge Map)
 function isApiRequest(request) {
-  return request.url.startsWith('https://api.openchargemap.io/');
+  return request.url.includes('overpass-api.de') || request.url.includes('api.openchargemap.io');
 }
 
 self.addEventListener('fetch', event => {
@@ -39,9 +40,12 @@ self.addEventListener('fetch', event => {
     event.respondWith(
       fetch(request)
         .then(networkRes => {
-          // optionally cache a clone
-          const resClone = networkRes.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(request, resClone));
+          try {
+            const resClone = networkRes.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(request, resClone));
+          } catch (e) {
+            // ignore cache errors
+          }
           return networkRes;
         })
         .catch(() => caches.match(request))
@@ -49,16 +53,12 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // For navigation requests, try cache first, then network, fallback offline page
+  // For navigation requests, try network first and fallback to offline page
   if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request).catch(() => caches.match('/offline.html'))
-    );
+    event.respondWith(fetch(request).catch(() => caches.match('/offline.html')));
     return;
   }
 
   // Cache-first for other assets
-  event.respondWith(
-    caches.match(request).then(cached => cached || fetch(request).catch(() => cached))
-  );
+  event.respondWith(caches.match(request).then(cached => cached || fetch(request).catch(() => cached)));
 });
