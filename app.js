@@ -101,24 +101,33 @@ async function getLocation() {
     L.marker([lat, lon]).addTo(markersLayer).bindPopup('Você está aqui').openPopup();
 
     try {
-      showStatus('Buscando estações próximas...');
+      const radiusInput = parseFloat(document.getElementById('radius')?.value || 10);
+      const useProxy = !!document.getElementById('useProxy')?.checked;
+      showStatus(`Buscando estações próximas (raio ${radiusInput} km)...`);
       // Primeiro, tentar usar a API serverless em /api/poi (se estiver disponível)
-      const url = `/api/poi?latitude=${lat}&longitude=${lon}&distance=10`;
+      const distanceParam = Math.max(0.1, radiusInput);
+      const url = useProxy ? `/api/poi?latitude=${lat}&longitude=${lon}&distance=${distanceParam}` : null;
       let data = null;
       try {
-        const response = await fetch(url);
-        if (response.ok) {
-          data = await response.json();
+        if (useProxy && url) {
+          const response = await fetch(url);
+          if (response.ok) {
+            data = await response.json();
+          } else {
+            throw new Error('API serverless indisponível ou retornou ' + response.status);
+          }
         } else {
-          throw new Error('API serverless indisponível ou retornou ' + response.status);
+          throw new Error('Ignorar proxy e usar Overpass');
         }
       } catch (proxyErr) {
         console.warn('Proxy /api/poi failed, fallback to Overpass:', proxyErr);
         // Fallback: usar Overpass (sem necessidade de chave)
-        data = await fetchOverpassStations(lat, lon);
+        data = await fetchOverpassStations(lat, lon, Math.round(distanceParam * 1000));
       }
 
       const resultsDiv = document.getElementById('results');
+      const debugDiv = document.getElementById('debug');
+      if (debugDiv) debugDiv.textContent = 'Raw response: ' + JSON.stringify(data).slice(0, 2000);
       resultsDiv.innerHTML = '<h2>Estações próximas:</h2>';
 
       if (!Array.isArray(data) || data.length === 0) {

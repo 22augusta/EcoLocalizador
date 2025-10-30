@@ -8,6 +8,8 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00695c">
     <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-sA+e2A6m0tqv8gqk2sYkGq5w5p2b0sH6f3b8g9g9t2M=" crossorigin="" />
 </head>
 
 <body>
@@ -17,9 +19,15 @@
     </header>
 
     <main>
+        <div id="status" aria-live="polite" style="margin-bottom:8px;color:#555;"></div>
         <section class="controls">
-            <button id="locateBtn">Buscar lugares próximos (Geolocalização)</button>
-            <button id="cameraBtn">Abrir câmera</button>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <button id="locateBtn">Buscar lugares próximos</button>
+                <label for="radius">Raio (km):</label>
+                <input id="radius" type="number" min="0.1" step="0.1" value="10" style="width:80px;" />
+                <label><input id="useProxy" type="checkbox" checked /> usar /api/poi</label>
+                <button id="cameraBtn">Abrir câmera</button>
+            </div>
         </section>
 
         <section id="cameraSection" hidden>
@@ -33,12 +41,16 @@
         </section>
 
         <section id="results" aria-live="polite"></section>
+        <section id="debug" style="margin-top:1rem; font-size:13px; color:#333;"></section>
+        <section id="map" style="height:320px; margin-top:1rem;"></section>
     </main>
 
     <footer>
         <small>Offline: o app usa cache básico. Serve como PWA demonstrativa.</small>
     </footer>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-o9N1j8J+0hFfQvYgV7x3l8Xf2eQ6k6Y9p+0+q5l5mP4=" crossorigin=""></script>
     <script src="/app.js"></script>
 </body>
 
